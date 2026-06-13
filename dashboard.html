@@ -99,7 +99,7 @@ footer{text-align:center;padding:14px;font-size:12px;color:var(--ink-soft)}
   </div>
   <div class="status">
     <div class="call-state"><span class="dot" id="dot"></span><span id="callstate">Waiting for call</span></div>
-    <button class="demo" id="demoBtn">▶ Run demo sequence</button>
+    <button class="demo" id="demoBtn">▶ Watch the live demo</button>
   </div>
 </header>
 
@@ -209,9 +209,13 @@ function showClip(c){
     <div class="play-note">Voice: Cartesia Sonic · <b>Saathi's own voice speaking Kannada</b> · word-synced · sent to worker via SMS</div>`;
   const spans = [...document.querySelectorAll('#kannada-line .kw')];
   const setActive = i => spans.forEach((s,k)=>s.classList.toggle('active', k===i));
+  function timedSweep(){            // visual karaoke without audio (or while autoplay is blocked)
+    if(karaokeTimer) return;
+    let i = 0; setActive(0);
+    karaokeTimer = setInterval(()=>{ i++; if(i>=spans.length){ setActive(-1); clearInterval(karaokeTimer); karaokeTimer=null; } else setActive(i); }, 300);
+  }
   const audio = $("clip-audio");
   if(audio){
-    // sync the highlight to real Cartesia audio
     let times = words.map(o=>({start:o.start,end:o.end}));
     if(!hasTimes){
       audio.addEventListener('loadedmetadata', ()=>{
@@ -219,17 +223,18 @@ function showClip(c){
         times = words.map((o,i)=>({start:i*d/words.length, end:(i+1)*d/words.length}));
       });
     }
+    audio.addEventListener('play', ()=>{ if(karaokeTimer){ clearInterval(karaokeTimer); karaokeTimer=null; } });
     audio.addEventListener('timeupdate', ()=>{
       const t = audio.currentTime; let a = -1;
       for(let i=0;i<times.length;i++){ if(t>=times[i].start && t<times[i].end){ a=i; break; } }
       setActive(a);
     });
     audio.addEventListener('ended', ()=>setActive(-1));
-    audio.play().catch(()=>{});   // best-effort autoplay; if blocked, presenter clicks play
+    // try to autoplay with sound; if the browser blocks it, run the visual sweep so a
+    // hands-off viewer still SEES the karaoke (sound starts the moment they press play).
+    audio.play().catch(()=>timedSweep());
   } else if(words.length){
-    // DEMO MODE: no audio file — sweep the highlight on a timer so it still reads as live
-    let i = 0; setActive(0);
-    karaokeTimer = setInterval(()=>{ i++; if(i>=spans.length){ setActive(-1); clearInterval(karaokeTimer); karaokeTimer=null; } else setActive(i); }, 300);
+    timedSweep();
   }
 }
 function showFollowup(f){
@@ -265,11 +270,6 @@ setInterval(poll, 1500);
    The two marquee beats (complaint + Kannada card) call the REAL backend so the
    Cartesia voice card plays genuine audio with real karaoke. Falls back to baked-in
    data if the server isn't reachable, so the demo still runs fully offline. */
-async function fetchLatest(type){
-  try{ const s = await (await fetch(API+"/api/state")).json();
-       return [...(s.events||[])].reverse().find(e=>e.type===type); }
-  catch(e){ return null; }
-}
 const script = [
   [0,   ()=>{ setCall("Live call in progress"); activate("saathi");
         $("caseid").textContent="CASE — PD-2026-0117"; $("casedate").textContent="13 Jun 2026"; }],
@@ -282,26 +282,23 @@ const script = [
   [10600,()=>bubble("worker","ठेकेदार सुरेश है, व्हाइटफ़ील्ड की साइट, प्रेस्टीज वाली बिल्डिंग।")],
   [12200, async ()=>{ setField("f-issues","Wage theft — ₹4,500");
         let data={name:"Ramesh Yadav",contractor:"Suresh (sub-contractor)",amount:"4,500",site:"Prestige site, Whitefield",period:"19 May – 8 Jun 2026",ref:"SS/KA/2026/88412"};
-        try{ await fetch(API+"/api/tools/file-complaint",{method:"POST",headers:{"Content-Type":"application/json"},
+        try{ const r=await fetch(API+"/api/tools/file-complaint",{method:"POST",headers:{"Content-Type":"application/json"},
                body:JSON.stringify({worker_name:data.name,contractor:data.contractor,amount:data.amount,site:data.site,period:data.period})});
-             const ev=await fetchLatest("complaint"); if(ev) data=ev.data; }catch(e){}
+             const j=await r.json(); if(j.reference_number) data.ref=j.reference_number; }catch(e){}  // real ref, concurrency-safe
         showComplaint(data); }],
   [13400,()=>bubble("agent","आपकी शिकायत श्रम सुविधा पोर्टल पर दर्ज हो गई — नंबर SMS पर भेज दिया है। 7 दिन में ठेकेदार को नोटिस जाएगा।")],
   [16000,()=>bubble("worker","एक और बात... दो दिन से पेट में बहुत दर्द है। यहाँ अस्पताल में कन्नड़ बोलते हैं, मुझे कुछ समझ नहीं आता।")],
   [18000,()=>{ activate("sehat"); bubble("system","→ routing to Sehat · health assist"); }],
   [18800,()=>bubble("agent","चिंता मत कीजिए। पास का सरकारी अस्पताल है — सी.वी. रमन जनरल, इंदिरानगर। मैं एक ऑडियो भेज रहा हूँ — काउंटर पर बस इसे चला दीजिए।")],
   [20600, async ()=>{ let data={kannada_text:"ನಮಸ್ಕಾರ. ಇವರ ಹೆಸರು ರಮೇಶ್. ಇವರಿಗೆ ಎರಡು ದಿನದಿಂದ ಹೊಟ್ಟೆ ನೋವು ಇದೆ. ಇವರಿಗೆ ಕನ್ನಡ ಬರುವುದಿಲ್ಲ. ದಯವಿಟ್ಟು ಸಹಾಯ ಮಾಡಿ. ತುರ್ತು ಸಂಪರ್ಕ: ಪ್ರವಾಸಿ ಡೆಸ್ಕ್.",audio_url:"",words:[]};
-        try{ await fetch(API+"/api/tools/health-clip",{method:"POST",headers:{"Content-Type":"application/json"},
-               body:JSON.stringify({worker_name:"Ramesh",symptom_hindi:"pet dard"})});
-             const ev=await fetchLatest("clip"); if(ev) data=ev.data; }catch(e){}
+        try{ const r=await fetch(API+"/api/demo-card"); const j=await r.json(); if(j.kannada_text) data=j; }catch(e){}  // cached real Cartesia card
         showClip(data); }],
   [22400,()=>{ showFollowup({name:"Ramesh",when:"Tomorrow 6:00 PM IST"}); }],
   [23400,()=>bubble("agent","और रमेश जी — कल शाम मैं ख़ुद फ़ोन करके पूछूँगा कि अस्पताल में सब ठीक रहा या नहीं। आप अकेले नहीं हैं।")],
   [26000,()=>{ setCall("Call ended — case updated"); activate(null); bubble("system","call ended · 2 actions completed · follow-up scheduled"); }]
 ];
 $("demoBtn").addEventListener("click", ()=>{
-  liveMode = false;                                   // stop polling; we drive the sequence
-  fetch(API+"/api/reset",{method:"POST"}).catch(()=>{}); // clean server state for the real-backed beats
+  liveMode = false;            // stop polling; we drive the sequence client-side (concurrency-safe)
   $("transcript").innerHTML = "";
   script.forEach(([t,fn])=>setTimeout(fn,t));
 });

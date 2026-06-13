@@ -275,11 +275,10 @@ async def symptom_to_kannada(symptom_hindi: str) -> str:
 #    STANDOUT: rendered in Saathi's OWN voice speaking Kannada (Cartesia multilingual /
 #    localized voice) + word-level timestamps drive the karaoke captions on the dashboard.
 # =====================================================================
-@app.post("/api/tools/health-clip")
-async def health_clip(req: Request):
-    p = await req.json()
-    name = p.get("worker_name", STATE["case"].get("name", "Worker"))
-    symptom = await symptom_to_kannada(p.get("symptom_hindi", ""))
+async def generate_card(name: str, symptom_hindi: str) -> dict:
+    """Render the Kannada hospital voice card with Cartesia (audio + word timestamps).
+    Returns {kannada_text, audio_url, words}. Never raises — degrades to text-only."""
+    symptom = await symptom_to_kannada(symptom_hindi)
     kannada = (f"ನಮಸ್ಕಾರ. ಇವರ ಹೆಸರು {name}. ಇವರಿಗೆ ಎರಡು ದಿನದಿಂದ {symptom}. "
                f"ಇವರಿಗೆ ಕನ್ನಡ ಬರುವುದಿಲ್ಲ. ದಯವಿಟ್ಟು ಸಹಾಯ ಮಾಡಿ. ತುರ್ತು ಸಂಪರ್ಕ: ಪ್ರವಾಸಿ ಡೆಸ್ಕ್.")
     audio_url, words = "", []
@@ -300,10 +299,37 @@ async def health_clip(req: Request):
         audio_url = f"{PUBLIC_BASE}/{fname}"
     except Exception as e:
         print("Cartesia error (demo continues with text card):", e)
+    return {"kannada_text": kannada, "audio_url": audio_url, "words": words}
+
+@app.post("/api/tools/health-clip")
+async def health_clip(req: Request):
+    p = await req.json()
+    name = p.get("worker_name", STATE["case"].get("name", "Worker"))
+    card = await generate_card(name, p.get("symptom_hindi", ""))
     push({"type": "agent", "agent": "sehat"})
-    push({"type": "clip", "data": {"kannada_text": kannada, "audio_url": audio_url, "words": words}})
+    push({"type": "clip", "data": card})
     return {"status": "created", "spoken_summary":
             "Audio card ready. Tell the worker it has been sent by SMS and they should play it at the hospital counter."}
+
+# Cached card for the self-playing demo — generated once, served instantly to every
+# viewer (no per-click Cartesia cost, no races). Pre-warmed on startup.
+DEMO_CARD = None
+
+@app.get("/api/demo-card")
+async def demo_card():
+    global DEMO_CARD
+    if not DEMO_CARD or not DEMO_CARD.get("audio_url"):
+        DEMO_CARD = await generate_card("Ramesh", "pet dard")
+    return DEMO_CARD
+
+@app.on_event("startup")
+async def _prewarm_demo_card():
+    global DEMO_CARD
+    try:
+        DEMO_CARD = await generate_card("Ramesh", "pet dard")
+        print("Demo card pre-warmed:", DEMO_CARD.get("audio_url") or "(text only — check Cartesia keys)")
+    except Exception as e:
+        print("Demo card pre-warm skipped:", e)
 
 # =====================================================================
 # 4) PROACTIVE FOLLOW-UP — the killer mechanic.
