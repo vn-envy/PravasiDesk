@@ -136,16 +136,29 @@ async def cartesia_localize(source_voice_id: str, language: str, name: str, desc
         r.raise_for_status()
         return r.json()
 
+def pcm16_to_wav(pcm: bytes, sample_rate: int = 44100, channels: int = 1) -> bytes:
+    """Wrap raw 16-bit PCM in a WAV header so the browser <audio> can play it."""
+    import wave, io
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(channels)
+        w.setsampwidth(2)            # 16-bit
+        w.setframerate(sample_rate)
+        w.writeframes(pcm)
+    return buf.getvalue()
+
 async def cartesia_tts_sse(text: str, voice_id: str, language: str):
-    """Stream TTS over SSE, aggregating audio chunks + word timestamps.
-    Returns (audio_bytes, words) where words = [{w,start,end}]. Raises on failure."""
+    """Stream TTS over SSE (raw PCM — the only container SSE supports), aggregating
+    audio + word timestamps. Returns (wav_bytes, words) with words=[{w,start,end}].
+    Raises on failure so health_clip can fall back to /tts/bytes."""
     import base64
+    SR = 44100
     audio = bytearray()
     words = []
     body = {"model_id": CARTESIA_MODEL, "transcript": text,
             "voice": {"mode": "id", "id": voice_id},
             "language": language, "add_timestamps": True,
-            "output_format": {"container": "mp3", "sample_rate": 44100, "bit_rate": 128000}}
+            "output_format": {"container": "raw", "encoding": "pcm_s16le", "sample_rate": SR}}
     async with httpx.AsyncClient(timeout=60) as cx:
         async with cx.stream("POST", "https://api.cartesia.ai/tts/sse",
             headers={"X-API-Key": os.environ["CARTESIA_API_KEY"],
@@ -170,7 +183,9 @@ async def cartesia_tts_sse(text: str, voice_id: str, language: str):
                                       "end": es[i] if i < len(es) else None})
                 elif ev.get("type") == "error":
                     raise RuntimeError(ev.get("message", "cartesia sse error"))
-    return bytes(audio), words
+    if not audio:
+        raise RuntimeError("cartesia sse returned no audio")
+    return pcm16_to_wav(bytes(audio), SR), words
 
 async def cartesia_tts_bytes(text: str, voice_id: str, language: str):
     """Fallback: plain mp3 bytes, no timestamps."""
@@ -256,14 +271,16 @@ async def health_clip(req: Request):
     audio_url, words = "", []
     voice = kannada_voice()
     try:
+        ext = "wav"
         try:
-            content, words = await cartesia_tts_sse(kannada, voice, "kn")  # audio + timestamps
+            content, words = await cartesia_tts_sse(kannada, voice, "kn")  # wav audio + word timestamps
         except Exception as e_sse:
             print("Cartesia SSE failed, falling back to /tts/bytes (no timestamps):", e_sse)
-            content = await cartesia_tts_bytes(kannada, voice, "kn")
+            content = await cartesia_tts_bytes(kannada, voice, "kn")       # mp3, no timestamps
             words = []
+            ext = "mp3"
         os.makedirs("static", exist_ok=True)
-        fname = f"static/clip_{uuid.uuid4().hex[:6]}.mp3"
+        fname = f"static/clip_{uuid.uuid4().hex[:6]}.{ext}"
         with open(fname, "wb") as f:
             f.write(content)
         audio_url = f"{PUBLIC_BASE}/{fname}"
