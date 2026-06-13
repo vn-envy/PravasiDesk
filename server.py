@@ -29,6 +29,7 @@ logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 LOGGER = logging.getLogger("pravasidesk")
 
 STATIC_DIR = "static"
+AUDIO_DIR = os.path.join(STATIC_DIR, "audio")
 STATE_FILE = os.environ.get("STATE_FILE", "demo_state.json")
 CARTESIA_VERSION = os.environ.get("CARTESIA_VERSION", "2024-11-13")
 CARTESIA_MODEL = os.environ.get("CARTESIA_MODEL_ID") or os.environ.get(
@@ -36,6 +37,7 @@ CARTESIA_MODEL = os.environ.get("CARTESIA_MODEL_ID") or os.environ.get(
 )
 
 os.makedirs(STATIC_DIR, exist_ok=True)
+os.makedirs(AUDIO_DIR, exist_ok=True)
 
 app = FastAPI()
 app.add_middleware(
@@ -71,6 +73,14 @@ def public_base_url() -> str:
         os.environ.get("PUBLIC_BASE_URL")
         or os.environ.get("RENDER_EXTERNAL_URL")
         or "http://localhost:8000"
+    ).rstrip("/")
+
+
+def public_asset_base_url() -> str:
+    return (
+        os.environ.get("PUBLIC_BASE_URL")
+        or os.environ.get("RENDER_EXTERNAL_URL")
+        or ""
     ).rstrip("/")
 
 
@@ -346,10 +356,12 @@ def update_wage_complaint(
 
 def persist_audio_file(content: bytes, extension: str) -> str:
     file_name = f"clip_{uuid.uuid4().hex[:6]}.{extension}"
-    path = os.path.join(STATIC_DIR, file_name)
+    path = os.path.join(AUDIO_DIR, file_name)
     with open(path, "wb") as handle:
         handle.write(content)
-    return f"{public_base_url()}/audio/{file_name}"
+    asset_path = f"/static/audio/{file_name}"
+    base_url = public_asset_base_url()
+    return f"{base_url}{asset_path}" if base_url else asset_path
 
 
 # =====================================================================
@@ -543,8 +555,8 @@ async def generate_health_card(
     if not text:
         symptom = await symptom_to_kannada(symptom_hindi)
         text = (
-            f"ನಮಸ್ಕಾರ. ಇವರ ಹೆಸರು {worker_name}. ಇವರಿಗೆ ಎರಡು ದಿನದಿಂದ {symptom}. "
-            "ಇವರಿಗೆ ಕನ್ನಡ ಬರುವುದಿಲ್ಲ. ದಯವಿಟ್ಟು ಸಹಾಯ ಮಾಡಿ. ತುರ್ತು ಸಂಪರ್ಕ: ಪ್ರವಾಸಿ ಡೆಸ್ಕ್."
+            f"ನಮಸ್ಕಾರ. ಇವರ ಹೆಸರು {worker_name}. ಇವರಿಗೆ {symptom}. "
+            "ಇವರಿಗೆ ಕನ್ನಡ ಬರುವುದಿಲ್ಲ. ದಯವಿಟ್ಟು ಸಹಾಯ ಮಾಡಿ."
         )
 
     card = {
@@ -717,15 +729,15 @@ async def file_complaint(req: Request) -> dict[str, Any]:
         period=period,
         city=city,
         days_unpaid=None,
-        status="filed",
+        status="recorded_internal",
         reference_id=build_reference_id(demo=False),
     )
     save_state()
     return {
-        "status": "filed",
+        "status": "recorded_internal",
         "reference_number": complaint["reference_id"],
         "next_step": (
-            "Contractor receives notice within 7 days. Reference sent to worker by SMS."
+            "Internal case record created. A real deployment would pass this to a verified legal escalation or labour helpline workflow."
         ),
     }
 
@@ -744,20 +756,12 @@ def demo_seed() -> dict[str, Any]:
     set_case_field("local_language_issue", "Kannada", field_id="lang")
     set_case_field("issues", "Unpaid wages and hospital language barrier")
     add_transcript(
-        "agent",
-        "नमस्ते रमेश जी, मैं साथी बोल रही हूँ। घबराइए मत, आराम से बताइए क्या परेशानी है।",
-    )
-    add_transcript(
         "worker",
-        "मैं बिहार से आया हूँ। बेंगलुरु में कंस्ट्रक्शन का काम करता हूँ।",
+        "Namaste Saathi, main Bihar se Bengaluru kaam ke liye aaya hoon.",
     )
     add_transcript(
         "agent",
-        "ठीक है जी. मैं आपकी मज़दूरी और अस्पताल वाली दोनों दिक्कत में मदद करूँगी.",
-    )
-    add_transcript(
-        "worker",
-        "बारह दिन की मज़दूरी नहीं मिली है, और पेट में दर्द है. अस्पताल में कन्नड़ समझ नहीं आता.",
+        "Namaste bhai, main Saathi hoon. Aap aaram se batayein, main sun raha hoon.",
     )
     save_state()
     return state_snapshot()
@@ -767,10 +771,13 @@ def demo_seed() -> dict[str, Any]:
 async def demo_wage() -> dict[str, Any]:
     if not STATE["current_case"].get("id"):
         demo_seed()
-    add_transcript("worker", "Saathi, mera 12 din ka paisa nahi mila.")
+    add_transcript(
+        "worker",
+        "Mera 12 din ka paisa nahi mila. Thekedar kal bolke taal raha hai.",
+    )
     add_transcript(
         "agent",
-        "समझ गई जी. मैं अभी आपकी शिकायत ड्राफ्ट करती हूँ ताकि मज़दूरी रुकने का रिकॉर्ड बन जाए.",
+        "Samajh gaya. Main aapka case note kar raha hoon: shehar, kaam, din aur thekedar ka naam. Isse hum aage escalate karne layak record bana sakte hain.",
     )
     update_wage_complaint(
         worker_name=STATE["current_case"].get("name") or "Ramesh Yadav",
@@ -807,8 +814,7 @@ async def health_clip(req: Request) -> dict[str, Any]:
     return {
         "status": "created",
         "spoken_summary": (
-            "Audio card ready. Tell the worker it has been sent by SMS and they should "
-            "play it at the hospital counter."
+            "Audio card ready. Tell the worker they can play it at the hospital counter."
         ),
     }
 
@@ -823,7 +829,7 @@ async def demo_health() -> dict[str, Any]:
     )
     add_transcript(
         "agent",
-        "चिंता मत कीजिए जी. मैं आपके लिए अभी एक कन्नड़ हेल्थ कार्ड तैयार कर रही हूँ.",
+        "Theek hai. Main aapke liye Kannada mein ek chhota voice card bana raha hoon jo aap counter par suna sakte hain.",
     )
     card = await generate_health_card(
         worker_name=STATE["current_case"].get("name") or "Ramesh Yadav",
@@ -939,6 +945,8 @@ async def followup(req: Request) -> dict[str, Any]:
 @app.on_event("startup")
 async def startup() -> None:
     global DEMO_CARD
+    os.makedirs(STATIC_DIR, exist_ok=True)
+    os.makedirs(AUDIO_DIR, exist_ok=True)
     load_state()
     try:
         DEMO_CARD = await generate_health_card(
@@ -958,4 +966,3 @@ async def startup() -> None:
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-app.mount("/audio", StaticFiles(directory=STATIC_DIR), name="audio")

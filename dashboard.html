@@ -503,11 +503,35 @@ button{
   font-size:12px;
   text-align:center;
 }
+.standout-grid{
+  display:grid;
+  grid-template-columns:repeat(5, minmax(0,1fr));
+  gap:12px;
+  margin-top:18px;
+}
+.standout-item{
+  padding:14px;
+  border-radius:18px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+}
+.standout-item h4{
+  margin:0 0 8px;
+  font-size:14px;
+  font-family:"Space Grotesk",sans-serif;
+}
+.standout-item p{
+  margin:0;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.55;
+}
 @media (max-width:1240px){
   .status-grid{grid-template-columns:repeat(3, minmax(0,1fr))}
   .main-grid{grid-template-columns:1fr}
   .controls-grid{grid-template-columns:repeat(2, minmax(0,1fr))}
   .arch-strip{grid-template-columns:repeat(3, minmax(0,1fr))}
+  .standout-grid{grid-template-columns:repeat(3, minmax(0,1fr))}
 }
 @media (max-width:760px){
   .shell{width:min(100vw - 16px, 100%)}
@@ -517,7 +541,8 @@ button{
   .controls-grid,
   .info-grid,
   .kv-grid,
-  .arch-strip{grid-template-columns:1fr}
+  .arch-strip,
+  .standout-grid{grid-template-columns:1fr}
   .bubble{max-width:100%}
 }
 </style>
@@ -531,8 +556,8 @@ button{
         <h1>Pravaasi<span class="gradient-word">Desk</span></h1>
         <p class="tagline">A voice-first helpdesk for migrant workers</p>
         <p class="subcopy">
-          Bolna handles voice orchestration, webhooks, custom tool calls, and follow-up workflows.
-          Cartesia generates multilingual voice cards so workers can carry clear hospital speech support into the real world.
+          A hackathon prototype for workers who are stuck between language barriers, paperwork gaps, and urgent everyday problems.
+          Saathi does not act as a lawyer or doctor. Saathi listens, documents, translates, and helps route the next step.
         </p>
       </div>
       <div id="backendIndicator" class="health-chip offline">
@@ -550,7 +575,7 @@ button{
       <div class="status-tile">
         <div class="status-label">Demo Mode</div>
         <div class="status-value" id="demoModeStatus">Unknown</div>
-        <div class="status-sub">Judge-safe deterministic flows</div>
+        <div class="status-sub">Judge-safe deterministic flows for a hackathon prototype</div>
       </div>
       <div class="status-tile">
         <div class="status-label">Public Demo Number</div>
@@ -565,13 +590,13 @@ button{
       <div class="status-tile">
         <div class="status-label">Speech Stack</div>
         <div class="status-value" id="speechStack">Bolna + Cartesia</div>
-        <div class="status-sub" id="speechStackSub">Voice agent orchestration + multilingual TTS</div>
+        <div class="status-sub" id="speechStackSub">Bolna handles calls. Cartesia creates local-language speech.</div>
       </div>
     </div>
 
     <div class="orchestration">
-      <div class="mini-pill teal">Bolna: voice orchestration, call webhooks, custom tool calls, outbound follow-up</div>
-      <div class="mini-pill amber">Cartesia: natural multilingual TTS, Kannada/Hindi voice-card generation, timestamps when available</div>
+      <div class="mini-pill teal">Bolna: Live calls, Saathi voice agent, webhook updates, tool calls, outbound follow-up.</div>
+      <div class="mini-pill amber">Cartesia: Natural multilingual speech, Kannada voice card, expressive local-language audio.</div>
       <div class="mini-pill" id="pinIndicator">Judge demo pin disabled</div>
     </div>
   </section>
@@ -582,7 +607,7 @@ button{
         <div class="section-head">
           <div>
             <h2 class="section-title">Judge Controls</h2>
-            <div class="section-note">Use the backend demo endpoints directly. Buttons disable while requests are in flight.</div>
+            <div class="section-note">Use the backend demo endpoints directly. This shows what is live now, what is demo data, and what would need verified integrations later.</div>
           </div>
         </div>
         <div class="controls-grid">
@@ -609,7 +634,7 @@ button{
         <div class="section-head">
           <div>
             <h2 class="section-title">Live Call Panel</h2>
-            <div class="section-note">High-signal runtime view for judges: call status, worker context, and latest issue state.</div>
+            <div class="section-note">High-signal runtime view for judges: call status, worker context, and the latest documented issue.</div>
           </div>
         </div>
         <div class="info-grid">
@@ -623,7 +648,7 @@ button{
           </div>
           <div class="info-card">
             <div class="info-label">Current Issue</div>
-            <div class="info-value small" id="liveIssue">Waiting for demo input</div>
+            <div class="info-value small" id="liveIssue">Waiting for worker context</div>
           </div>
           <div class="info-card">
             <div class="info-label">City</div>
@@ -644,7 +669,7 @@ button{
         <div class="section-head">
           <div>
             <h2 class="section-title">Transcript</h2>
-            <div class="section-note">Worker messages appear left. Saathi replies appear right. System and tool activity shows up as compact event pills.</div>
+            <div class="section-note">Worker messages appear left in simple Hindi. Saathi replies appear right in a warm, non-corporate tone. System and tool activity appears as compact English pills.</div>
           </div>
         </div>
         <div id="transcriptPanel" class="transcript-wrap">
@@ -658,7 +683,7 @@ button{
         <div class="section-head">
           <div>
             <h2 class="section-title">Case File</h2>
-            <div class="section-note">Current case fields derived from `/api/state`.</div>
+            <div class="section-note">Current case fields derived from `/api/state`. The prototype turns distress into a structured record that can be escalated later.</div>
           </div>
         </div>
         <div class="kv-grid">
@@ -693,7 +718,7 @@ button{
         <div class="section-head">
           <div>
             <h2 class="section-title">Wage Complaint</h2>
-            <div class="section-note">Demo/internal reference. Real deployment would integrate verified legal escalation or labour helpline workflow.</div>
+            <div class="section-note">Demo/internal reference. Real deployment would integrate verified legal escalation or a labour helpline workflow.</div>
           </div>
         </div>
         <div class="kv-grid">
@@ -724,7 +749,7 @@ button{
         <div class="section-head">
           <div>
             <h2 class="section-title">Hospital Voice Card</h2>
-            <div class="section-note">Cartesia generates the Kannada voice card.</div>
+            <div class="section-note">This is a language bridge, not a medical diagnosis. Cartesia generates the Kannada voice card that a worker can play at the counter.</div>
           </div>
         </div>
         <div class="voice-card">
@@ -763,23 +788,45 @@ button{
       </div>
       <div class="arch-node bolna">
         <h4>Bolna Voice Agent</h4>
-        <p>Voice orchestration, telephony, call webhooks, custom tool invocations, and outbound follow-up.</p>
+        <p>Live calls, Saathi voice agent, webhook updates, tool calls, outbound follow-up.</p>
       </div>
       <div class="arch-node">
         <h4>Saathi Router</h4>
-        <p>Warm Hindi front-door experience that gathers context and routes to the right assistance flow.</p>
+        <p>Warm Hindi front door that listens, documents, translates, and routes the next step without claiming to be a lawyer or doctor.</p>
       </div>
       <div class="arch-node">
         <h4>Specialist Tools</h4>
-        <p>Wage complaint drafting, hospital voice support, and future paperwork or housing tools.</p>
+        <p>Wage complaint drafting, hospital language support, and future paperwork or housing escalation paths.</p>
       </div>
       <div class="arch-node cartesia">
         <h4>Cartesia Voice Card</h4>
-        <p>Natural multilingual TTS for Kannada/Hindi speech cards, with timestamps when available.</p>
+        <p>Natural multilingual speech, Kannada voice card, expressive local-language audio.</p>
       </div>
       <div class="arch-node">
         <h4>Case Dashboard</h4>
-        <p>Judge-friendly command center for state, transcript, case updates, and follow-up readiness.</p>
+        <p>Judge-friendly command center showing what is live now, what is demo data, and what would be future verified integration.</p>
+      </div>
+    </div>
+    <div class="standout-grid">
+      <div class="standout-item">
+        <h4>No app required</h4>
+        <p>Workers can start with a normal phone call instead of downloads, forms, or literacy-heavy interfaces.</p>
+      </div>
+      <div class="standout-item">
+        <h4>Language + paperwork barrier aware</h4>
+        <p>Built for workers who struggle to explain urgent problems across language and documentation gaps.</p>
+      </div>
+      <div class="standout-item">
+        <h4>Structured case record</h4>
+        <p>Saathi converts distress into a clear case record that can be reviewed, documented, and escalated.</p>
+      </div>
+      <div class="standout-item">
+        <h4>Speakable local-language bridge</h4>
+        <p>The hospital card gives the worker a simple local-language sentence they can actually play at a counter.</p>
+      </div>
+      <div class="standout-item">
+        <h4>Escalation ready</h4>
+        <p>The prototype is built so a human operator, NGO, or verified helpline workflow can pick up the next step.</p>
       </div>
     </div>
     <div class="footer-line">Single-file dashboard served directly by FastAPI. No client-side framework required.</div>
@@ -889,8 +936,8 @@ function renderHero(){
   $("publicPhone").textContent = pretty(config.bolna_phone_number, "Not configured");
   $("lastEventAt").textContent = formatTime(health.last_event_at || state.appState?.last_event_at, "No events yet");
   $("speechStackSub").textContent = health.cartesia_configured
-    ? "Bolna orchestration live · Cartesia voice card available"
-    : "Bolna orchestration live · Cartesia fallback may be text-only";
+    ? "Bolna call flow live · Cartesia Kannada voice card available"
+    : "Bolna call flow live · Cartesia fallback is text-only for now";
   $("pinIndicator").textContent = config.judge_demo_pin_enabled ? "Judge demo pin enabled" : "Judge demo pin disabled";
 }
 
@@ -899,7 +946,7 @@ function renderLiveCall(){
   const current = app.current_case || app.case || {};
   $("liveCallStatus").textContent = pretty(app.call_status, "idle");
   $("liveWorkerName").textContent = pretty(current.name, "No active case");
-  $("liveIssue").textContent = pretty(current.issues, "Waiting for demo input");
+  $("liveIssue").textContent = pretty(current.issues, "Waiting for worker context");
   $("liveCity").textContent = pretty(current.current_city || current.city);
   $("liveLanguage").textContent = pretty(current.language || current.lang);
   $("liveLastUpdated").textContent = formatTime(app.last_event_at);
@@ -958,8 +1005,8 @@ function eventLabel(event){
   if(event.type === "case_open") return `Case opened · ${event.id || "new case"}`;
   if(event.type === "field") return `${event.field || "field"} updated · ${event.value || "—"}`;
   if(event.type === "agent") return `Routed to ${event.agent || "tool"}`;
-  if(event.type === "complaint") return `Wage complaint prepared · ${event.data?.reference_id || event.data?.ref || "ref pending"}`;
-  if(event.type === "clip") return event.data?.audio_url ? "Hospital voice card generated" : "Hospital voice card text fallback";
+  if(event.type === "complaint") return `Internal wage record prepared · ${event.data?.reference_id || event.data?.ref || "ref pending"}`;
+  if(event.type === "clip") return event.data?.audio_url ? "Hospital language bridge generated" : "Hospital language bridge in text-only fallback";
   if(event.type === "followup") return `Follow-up ready · ${event.data?.when || "pending"}`;
   if(event.type === "call_end") return "Call ended";
   return event.type || "system event";
