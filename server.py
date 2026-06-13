@@ -21,6 +21,7 @@ import os, time, uuid, json, datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import httpx
 from dotenv import load_dotenv
 
@@ -30,7 +31,11 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 CARTESIA_VERSION = os.environ.get("CARTESIA_VERSION", "2025-04-16")
 CARTESIA_MODEL = os.environ.get("CARTESIA_MODEL", "sonic-3")
-PUBLIC_BASE = os.environ.get("PUBLIC_BASE_URL", "http://localhost:8000")  # set to ngrok URL for real SMS links
+# Public origin for audio-card links. On Render, RENDER_EXTERNAL_URL is injected
+# automatically; locally, set PUBLIC_BASE_URL to your tunnel URL.
+PUBLIC_BASE = (os.environ.get("PUBLIC_BASE_URL")
+               or os.environ.get("RENDER_EXTERNAL_URL")
+               or "http://localhost:8000")
 
 def hindi_voice():
     return os.environ.get("CARTESIA_HINDI_VOICE_ID") or os.environ.get("CARTESIA_VOICE_ID", "")
@@ -45,6 +50,15 @@ STATE = {"call_active": False, "events": [], "case": {}}
 def push(ev: dict):
     ev["ts"] = time.time()
     STATE["events"].append(ev)
+
+# ---------- serve the dashboard from the backend (one origin, host-agnostic) ----------
+@app.get("/")
+def dashboard():
+    return FileResponse("dashboard.html")
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
 
 # ---------- dashboard polls this ----------
 @app.get("/api/state")

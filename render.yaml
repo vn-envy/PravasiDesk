@@ -1,0 +1,24 @@
+# One-click deploy: Render → New → Blueprint → pick this repo.
+# Set the secret env vars in the Render dashboard (they're marked sync:false).
+services:
+  - type: web
+    name: pravasidesk
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: BOLNA_API_KEY
+        sync: false
+      - key: BOLNA_AGENT_ID
+        sync: false
+      - key: CARTESIA_API_KEY
+        sync: false
+      - key: CARTESIA_HINDI_VOICE_ID
+        sync: false
+      - key: CARTESIA_KANNADA_VOICE_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # PUBLIC_BASE_URL is optional — Render injects RENDER_EXTERNAL_URL automatically.

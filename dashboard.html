@@ -153,7 +153,9 @@ footer{text-align:center;padding:14px;font-size:12px;color:var(--ink-soft)}
 <footer>Powered by Bolna (voice orchestration) + Cartesia (speech) · Built at VOC-A-Thon, Bengaluru</footer>
 
 <script>
-const API = "http://localhost:8000"; // your FastAPI server
+// When served by the backend (Render/Railway/tunnel) → same origin. When opened as a
+// local file:// → fall back to localhost:8000.
+const API = (location.protocol === "file:") ? "http://localhost:8000" : location.origin;
 const $ = id => document.getElementById(id);
 let liveMode = true, lastEventCount = 0;
 
