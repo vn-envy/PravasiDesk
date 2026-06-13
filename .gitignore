@@ -1,0 +1,20 @@
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.key
+
+# Generated Cartesia voice cards
+static/*.mp3
+static/clip_*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
