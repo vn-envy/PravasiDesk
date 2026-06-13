@@ -1,22 +1,4 @@
-# Secrets — NEVER commit
-.env
-.env.*
-!.env.example
-*.key
-
-# Generated Cartesia voice cards
-static/*.mp3
-static/*.wav
-static/clip_*
-demo_state.json
-
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
-
-# OS / editor
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.trash/
 .DS_Store
-.vscode/
-.idea/
