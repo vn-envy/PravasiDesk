@@ -3,305 +3,1074 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PravaasiDesk — Command Center</title>
-<link href="https://fonts.googleapis.com/css2?family=Yatra+One&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Devanagari:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>PravaasiDesk Judge Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ledger:#EEF3F8; --ink:#0E1B2C; --ink-soft:#46586D;
-  --stamp:#C8102E; --marigold:#F2A900; --green:#1E7A46;
-  --card:#FFFFFF; --line:#C9D6E2;
+  --bg:#07111a;
+  --bg-2:#0b1824;
+  --panel:#0d1f2d;
+  --panel-2:#122637;
+  --panel-3:#102230;
+  --line:rgba(148,199,255,.14);
+  --line-strong:rgba(78,214,255,.26);
+  --text:#edf7ff;
+  --muted:#8ea6bc;
+  --muted-2:#6f8599;
+  --teal:#4be2ff;
+  --teal-soft:rgba(75,226,255,.14);
+  --amber:#ffb24a;
+  --amber-soft:rgba(255,178,74,.14);
+  --green:#53f0a1;
+  --red:#ff6e73;
+  --shadow:0 18px 48px rgba(0,0,0,.32);
+  --radius:22px;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--ledger);color:var(--ink);font-family:'IBM Plex Sans','IBM Plex Sans Devanagari',sans-serif;min-height:100vh}
-/* ruled-ledger background */
-body::before{content:"";position:fixed;inset:0;background:repeating-linear-gradient(transparent,transparent 31px,rgba(20,60,110,.05) 32px);pointer-events:none}
-
-header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:3px solid var(--ink);background:var(--card)}
-.brand{display:flex;align-items:baseline;gap:14px}
-.brand h1{font-family:'Yatra One',cursive;font-size:30px;letter-spacing:.5px}
-.brand h1 span{color:var(--stamp)}
-.brand .tag{font-size:12px;color:var(--ink-soft);max-width:340px;line-height:1.35}
-.status{display:flex;align-items:center;gap:18px}
-.call-state{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
-.dot{width:10px;height:10px;border-radius:50%;background:#9AA9B8}
-.dot.live{background:var(--stamp);animation:pulse 1.2s infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(200,16,46,.5)}50%{box-shadow:0 0 0 8px rgba(200,16,46,0)}}
-button.demo{font-family:inherit;font-weight:600;font-size:13px;padding:9px 18px;border:2px solid var(--ink);background:var(--marigold);cursor:pointer;box-shadow:3px 3px 0 var(--ink);transition:transform .1s}
-button.demo:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
-button.demo:focus-visible{outline:3px solid var(--stamp);outline-offset:2px}
-
-main{display:grid;grid-template-columns:330px 1fr 360px;gap:20px;padding:22px 28px;max-width:1440px;margin:0 auto}
-@media(max-width:1100px){main{grid-template-columns:1fr;}}
-
-.panel{background:var(--card);border:1.5px solid var(--line);position:relative}
-.panel-head{padding:11px 16px;border-bottom:1.5px solid var(--line);display:flex;justify-content:space-between;align-items:center}
-.panel-head h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
-.panel-head .hindi{font-family:'IBM Plex Sans Devanagari';font-size:13px;color:var(--ink)}
-
-/* transcript */
-#transcript{height:560px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
-.bubble{max-width:92%;padding:10px 13px;font-size:14px;line-height:1.5;border:1.5px solid var(--line);opacity:0;transform:translateY(8px);animation:rise .35s forwards}
-@keyframes rise{to{opacity:1;transform:none}}
-.bubble .who{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:3px}
-.bubble.worker{align-self:flex-start;background:#FFF8E8;border-color:#E8D9A8}
-.bubble.worker .who{color:#9A7300}
-.bubble.agent{align-self:flex-end;background:#F0F6FF;border-color:#BBD0EA}
-.bubble.agent .who{color:#1C4E89}
-.bubble.system{align-self:center;background:var(--ledger);font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono';padding:6px 12px}
-.bubble .dev{font-family:'IBM Plex Sans Devanagari'}
-
-/* case file */
-.case-card{padding:20px 22px}
-.case-id{font-family:'IBM Plex Mono';font-size:13px;color:var(--ink-soft);margin-bottom:14px;display:flex;justify-content:space-between}
-.field{display:grid;grid-template-columns:150px 1fr;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
-.field .k{color:var(--ink-soft);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;padding-top:2px}
-.field .v{font-weight:600}
-.field .v.empty{color:#B6C2CE;font-weight:400}
-.field .v .dev{font-family:'IBM Plex Sans Devanagari'}
-.v.flash{animation:fieldflash 1s}
-@keyframes fieldflash{0%{background:var(--marigold)}100%{background:transparent}}
-
-.agents{display:flex;gap:8px;padding:14px 22px 20px;flex-wrap:wrap}
-.agent-chip{font-size:12px;font-weight:600;padding:6px 12px;border:1.5px solid var(--line);color:var(--ink-soft);background:var(--ledger)}
-.agent-chip.active{border-color:var(--stamp);color:var(--stamp);background:#FFF1F2}
-
-/* complaint form with stamp */
-.complaint{padding:18px 20px;position:relative;min-height:240px}
-.complaint h3{font-size:14px;margin-bottom:12px}
-.complaint .row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--ledger)}
-.complaint .row b{font-family:'IBM Plex Mono';font-weight:500}
-.muted{color:#9AA9B8;font-size:13px;padding:30px 10px;text-align:center}
-.stamp{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%) rotate(-12deg) scale(3);opacity:0;border:4px solid var(--stamp);color:var(--stamp);font-family:'Yatra One';font-size:26px;padding:8px 22px;letter-spacing:2px;pointer-events:none;text-align:center;line-height:1.2}
-.stamp.show{animation:slam .45s cubic-bezier(.2,2.2,.4,1) forwards}
-@keyframes slam{0%{opacity:0;transform:translate(-50%,-50%) rotate(-12deg) scale(3)}100%{opacity:.88;transform:translate(-50%,-50%) rotate(-12deg) scale(1)}}
-
-/* health clip */
-.clip{padding:18px 20px}
-.clip .kannada{font-family:'IBM Plex Sans Devanagari';font-size:15px;line-height:1.9;background:#F3FAF5;border:1.5px solid #BFE0CA;padding:12px;margin:10px 0}
-.clip .kannada .kw{transition:background .12s,color .12s;padding:1px 2px;border-radius:3px}
-.clip .kannada .kw.active{background:var(--marigold);color:var(--ink);font-weight:600}
-.clip audio{width:100%;margin-top:8px}
-.play-note{font-size:12px;color:var(--ink-soft);margin-top:6px}
-
-/* followup */
-.followup{padding:18px 20px;font-size:14px}
-.followup .when{font-family:'IBM Plex Mono';font-size:13px;background:var(--ledger);padding:8px 12px;margin-top:10px;border-left:3px solid var(--green)}
-
-footer{text-align:center;padding:14px;font-size:12px;color:var(--ink-soft)}
-@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  color:var(--text);
+  font-family:"IBM Plex Sans",sans-serif;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(75,226,255,.18), transparent 28%),
+    radial-gradient(circle at 100% 0%, rgba(255,178,74,.12), transparent 24%),
+    linear-gradient(180deg, #050c13 0%, #08141f 45%, #091520 100%);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(120deg, rgba(75,226,255,.04), transparent 30%, rgba(255,178,74,.03) 70%, transparent),
+    repeating-linear-gradient(180deg, transparent 0 48px, rgba(255,255,255,.018) 48px 49px);
+  opacity:.9;
+}
+.shell{
+  position:relative;
+  z-index:1;
+  width:min(1480px, calc(100vw - 32px));
+  margin:20px auto 28px;
+}
+.card{
+  background:linear-gradient(180deg, rgba(14,31,45,.96), rgba(10,25,37,.98));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(10px);
+}
+.hero{
+  overflow:hidden;
+  position:relative;
+  padding:26px 28px 22px;
+}
+.hero::after{
+  content:"";
+  position:absolute;
+  right:-10%;
+  top:-30px;
+  width:48%;
+  height:220px;
+  background:
+    radial-gradient(circle at center, rgba(75,226,255,.22), transparent 46%),
+    radial-gradient(circle at 65% 55%, rgba(255,178,74,.16), transparent 34%);
+  filter:blur(10px);
+  pointer-events:none;
+}
+.hero-top{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:flex-start;
+}
+.title-wrap{
+  max-width:720px;
+}
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--teal);
+  background:var(--teal-soft);
+  border:1px solid rgba(75,226,255,.2);
+  margin-bottom:14px;
+}
+.eyebrow-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:0 0 18px currentColor;
+}
+h1{
+  margin:0;
+  font-family:"Space Grotesk",sans-serif;
+  font-size:clamp(34px, 5vw, 54px);
+  letter-spacing:-.04em;
+  line-height:1;
+}
+.gradient-word{
+  background:linear-gradient(90deg, var(--teal), #9af4ff 45%, var(--amber) 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.tagline{
+  margin:12px 0 0;
+  font-size:19px;
+  color:#d8ebfb;
+}
+.subcopy{
+  margin:14px 0 0;
+  font-size:14px;
+  color:var(--muted);
+  max-width:760px;
+  line-height:1.6;
+}
+.status-grid{
+  margin-top:24px;
+  display:grid;
+  grid-template-columns:repeat(5, minmax(0, 1fr));
+  gap:14px;
+}
+.status-tile{
+  padding:16px 16px 14px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:18px;
+}
+.status-label{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  color:var(--muted-2);
+  margin-bottom:10px;
+}
+.status-value{
+  font-size:18px;
+  font-weight:700;
+  line-height:1.2;
+}
+.status-sub{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+}
+.health-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+}
+.health-chip.online{
+  color:var(--green);
+  background:rgba(83,240,161,.1);
+  border:1px solid rgba(83,240,161,.22);
+}
+.health-chip.offline{
+  color:var(--red);
+  background:rgba(255,110,115,.1);
+  border:1px solid rgba(255,110,115,.22);
+}
+.chip-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:0 0 16px currentColor;
+}
+.orchestration{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+.mini-pill{
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:12px;
+  color:#c3d6e7;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+}
+.mini-pill.teal{color:var(--teal); background:var(--teal-soft); border-color:rgba(75,226,255,.2)}
+.mini-pill.amber{color:var(--amber); background:var(--amber-soft); border-color:rgba(255,178,74,.18)}
+.main-grid{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:1.15fr .95fr;
+  gap:18px;
+}
+.stack{
+  display:grid;
+  gap:18px;
+}
+.section{
+  padding:20px;
+}
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-start;
+  margin-bottom:16px;
+}
+.section-title{
+  margin:0;
+  font-family:"Space Grotesk",sans-serif;
+  font-size:22px;
+}
+.section-note{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+}
+.controls-grid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:12px;
+}
+button{
+  appearance:none;
+  border:none;
+  font:inherit;
+}
+.control-btn{
+  position:relative;
+  min-height:64px;
+  padding:14px 16px;
+  border-radius:18px;
+  color:var(--text);
+  cursor:pointer;
+  text-align:left;
+  font-weight:700;
+  transition:transform .15s ease, border-color .15s ease, background .15s ease, opacity .15s ease;
+  border:1px solid transparent;
+}
+.control-btn strong{
+  display:block;
+  font-size:16px;
+  margin-bottom:4px;
+}
+.control-btn span{
+  display:block;
+  font-size:12px;
+  color:rgba(255,255,255,.72);
+}
+.control-btn:hover:not(:disabled){transform:translateY(-1px)}
+.control-btn:disabled{opacity:.7;cursor:not-allowed}
+.control-btn.primary{
+  background:linear-gradient(135deg, rgba(75,226,255,.22), rgba(16,96,122,.28));
+  border-color:rgba(75,226,255,.28);
+}
+.control-btn.secondary{
+  background:linear-gradient(135deg, rgba(255,178,74,.18), rgba(120,63,10,.28));
+  border-color:rgba(255,178,74,.28);
+}
+.control-btn.ghost{
+  background:rgba(255,255,255,.04);
+  border-color:rgba(255,255,255,.08);
+}
+.control-btn.danger{
+  background:linear-gradient(135deg, rgba(255,110,115,.18), rgba(96,20,28,.32));
+  border-color:rgba(255,110,115,.28);
+}
+.control-btn.loading::after{
+  content:"";
+  position:absolute;
+  right:16px;
+  top:50%;
+  width:16px;
+  height:16px;
+  margin-top:-8px;
+  border:2px solid rgba(255,255,255,.22);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  gap:12px;
+}
+.info-card{
+  padding:16px;
+  border-radius:18px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+}
+.info-card .info-label{
+  color:var(--muted-2);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:11px;
+  margin-bottom:10px;
+}
+.info-card .info-value{
+  font-size:21px;
+  font-weight:700;
+}
+.info-card .info-value.small{
+  font-size:17px;
+}
+.transcript-wrap{
+  display:grid;
+  gap:12px;
+  max-height:680px;
+  overflow:auto;
+  padding-right:4px;
+}
+.empty-state{
+  padding:30px 18px;
+  text-align:center;
+  color:var(--muted);
+  border:1px dashed rgba(255,255,255,.12);
+  border-radius:18px;
+  background:rgba(255,255,255,.02);
+}
+.bubble-row{
+  display:flex;
+}
+.bubble-row.worker{justify-content:flex-start}
+.bubble-row.agent{justify-content:flex-end}
+.bubble{
+  max-width:78%;
+  border-radius:20px;
+  padding:14px 16px;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 10px 32px rgba(0,0,0,.18);
+}
+.bubble.worker{
+  background:linear-gradient(180deg, rgba(30,42,59,.95), rgba(19,31,43,.95));
+}
+.bubble.agent{
+  background:linear-gradient(180deg, rgba(10,61,77,.9), rgba(8,44,58,.95));
+  border-color:rgba(75,226,255,.18);
+}
+.bubble-head{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:center;
+  margin-bottom:8px;
+}
+.speaker{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  color:#c2d7e9;
+  font-weight:700;
+}
+.bubble.agent .speaker{color:#b5f7ff}
+.bubble-time{
+  color:var(--muted-2);
+  font-size:11px;
+}
+.bubble-text{
+  font-size:15px;
+  line-height:1.65;
+  color:#eff7ff;
+}
+.event-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:10px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  color:#d3e3f1;
+  font-size:12px;
+  max-width:100%;
+}
+.event-pill.system{border-color:rgba(75,226,255,.18)}
+.event-pill.tool{border-color:rgba(255,178,74,.2)}
+.pill-time{
+  color:var(--muted-2);
+  font-size:11px;
+}
+.kv-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:12px;
+}
+.kv{
+  padding:14px 15px;
+  border-radius:16px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  min-height:78px;
+}
+.kv-label{
+  color:var(--muted-2);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:11px;
+  margin-bottom:8px;
+}
+.kv-value{
+  font-size:16px;
+  font-weight:700;
+  line-height:1.4;
+}
+.kv-value.placeholder{color:var(--muted)}
+.panel-note{
+  margin-top:14px;
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.6;
+}
+.voice-card{
+  display:grid;
+  gap:12px;
+}
+.voice-box{
+  padding:14px 15px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+}
+.voice-box.teal{border-color:rgba(75,226,255,.2); background:rgba(75,226,255,.06)}
+.voice-box.amber{border-color:rgba(255,178,74,.2); background:rgba(255,178,74,.06)}
+.voice-box-label{
+  color:var(--muted-2);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:11px;
+  margin-bottom:8px;
+}
+.voice-box-value{
+  font-size:15px;
+  line-height:1.7;
+}
+.audio-wrap audio{
+  width:100%;
+  margin-top:4px;
+}
+.arch-strip{
+  display:grid;
+  grid-template-columns:repeat(6, minmax(0,1fr));
+  gap:12px;
+}
+.arch-node{
+  position:relative;
+  min-height:112px;
+  padding:14px;
+  border-radius:18px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+}
+.arch-node::after{
+  content:"→";
+  position:absolute;
+  right:-13px;
+  top:50%;
+  transform:translateY(-50%);
+  color:rgba(255,255,255,.34);
+  font-size:20px;
+}
+.arch-node:last-child::after{display:none}
+.arch-node h4{
+  margin:0 0 8px;
+  font-size:15px;
+  font-family:"Space Grotesk",sans-serif;
+}
+.arch-node p{
+  margin:0;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.55;
+}
+.arch-node.bolna{border-color:rgba(75,226,255,.22); background:rgba(75,226,255,.06)}
+.arch-node.cartesia{border-color:rgba(255,178,74,.22); background:rgba(255,178,74,.06)}
+.footer-line{
+  margin-top:18px;
+  color:var(--muted-2);
+  font-size:12px;
+  text-align:center;
+}
+@media (max-width:1240px){
+  .status-grid{grid-template-columns:repeat(3, minmax(0,1fr))}
+  .main-grid{grid-template-columns:1fr}
+  .controls-grid{grid-template-columns:repeat(2, minmax(0,1fr))}
+  .arch-strip{grid-template-columns:repeat(3, minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .shell{width:min(100vw - 16px, 100%)}
+  .hero{padding:20px}
+  .hero-top{flex-direction:column}
+  .status-grid,
+  .controls-grid,
+  .info-grid,
+  .kv-grid,
+  .arch-strip{grid-template-columns:1fr}
+  .bubble{max-width:100%}
+}
 </style>
 </head>
 <body>
-<header>
-  <div class="brand">
-    <h1>Pravaasi<span>Desk</span></h1>
-    <div class="tag">The relocation desk every corporate employee gets — now one phone call away for India's migrant workers.</div>
-  </div>
-  <div class="status">
-    <div class="call-state"><span class="dot" id="dot"></span><span id="callstate">Waiting for call</span></div>
-    <button class="demo" id="demoBtn">▶ Watch the live demo</button>
-  </div>
-</header>
-
-<main>
-  <!-- LEFT: live transcript -->
-  <section class="panel">
-    <div class="panel-head"><h2>Live Call</h2><span class="hindi" id="lang">हिन्दी</span></div>
-    <div id="transcript"><div class="muted">Transcript appears here when the worker calls.</div></div>
-  </section>
-
-  <!-- CENTER: case file -->
-  <section class="panel">
-    <div class="panel-head"><h2>Worker Case File</h2><span class="hindi">केस फ़ाइल</span></div>
-    <div class="case-card">
-      <div class="case-id"><span id="caseid">CASE — PENDING</span><span id="casedate"></span></div>
-      <div class="field"><span class="k">Name</span><span class="v empty" id="f-name">—</span></div>
-      <div class="field"><span class="k">Home State</span><span class="v empty" id="f-home">—</span></div>
-      <div class="field"><span class="k">Current City</span><span class="v empty" id="f-city">—</span></div>
-      <div class="field"><span class="k">Trade</span><span class="v empty" id="f-trade">—</span></div>
-      <div class="field"><span class="k">Language</span><span class="v empty" id="f-lang">—</span></div>
-      <div class="field"><span class="k">Open Issues</span><span class="v empty" id="f-issues">—</span></div>
-    </div>
-    <div class="agents">
-      <span class="agent-chip" id="a-saathi">🎙 Saathi · Orchestrator</span>
-      <span class="agent-chip" id="a-haq">⚖ Haq · Wages & Rights</span>
-      <span class="agent-chip" id="a-sehat">🏥 Sehat · Health</span>
-      <span class="agent-chip" id="a-basera">🏠 Basera · Housing</span>
-      <span class="agent-chip" id="a-kaagaz">📄 Kaagaz · Paperwork</span>
-    </div>
-  </section>
-
-  <!-- RIGHT: actions -->
-  <section style="display:flex;flex-direction:column;gap:20px">
-    <div class="panel">
-      <div class="panel-head"><h2>Wage Complaint · Shram Suvidha</h2><span class="hindi">शिकायत</span></div>
-      <div class="complaint" id="complaint">
-        <div class="muted">No complaint on file.</div>
-        <div class="stamp" id="stamp">शिकायत दर्ज<br><span style="font-size:14px;font-family:'IBM Plex Mono'">COMPLAINT FILED</span></div>
+<div class="shell">
+  <section class="card hero">
+    <div class="hero-top">
+      <div class="title-wrap">
+        <div class="eyebrow"><span class="eyebrow-dot"></span>Cartesia meets Bolna</div>
+        <h1>Pravaasi<span class="gradient-word">Desk</span></h1>
+        <p class="tagline">A voice-first helpdesk for migrant workers</p>
+        <p class="subcopy">
+          Bolna handles voice orchestration, webhooks, custom tool calls, and follow-up workflows.
+          Cartesia generates multilingual voice cards so workers can carry clear hospital speech support into the real world.
+        </p>
+      </div>
+      <div id="backendIndicator" class="health-chip offline">
+        <span class="chip-dot"></span>
+        <span>Backend offline</span>
       </div>
     </div>
-    <div class="panel">
-      <div class="panel-head"><h2>Hospital Voice Card · Kannada</h2><span class="hindi">ಕನ್ನಡ</span></div>
-      <div class="clip" id="clip"><div class="muted">Generated when worker reports a health issue.</div></div>
+
+    <div class="status-grid">
+      <div class="status-tile">
+        <div class="status-label">Backend Status</div>
+        <div class="status-value" id="backendStatus">Offline</div>
+        <div class="status-sub" id="backendService">PravaasiDesk service unreachable</div>
+      </div>
+      <div class="status-tile">
+        <div class="status-label">Demo Mode</div>
+        <div class="status-value" id="demoModeStatus">Unknown</div>
+        <div class="status-sub">Judge-safe deterministic flows</div>
+      </div>
+      <div class="status-tile">
+        <div class="status-label">Public Demo Number</div>
+        <div class="status-value" id="publicPhone">Not configured</div>
+        <div class="status-sub">From safe public config only</div>
+      </div>
+      <div class="status-tile">
+        <div class="status-label">Last Event</div>
+        <div class="status-value" id="lastEventAt">No events yet</div>
+        <div class="status-sub">State updates without page refresh</div>
+      </div>
+      <div class="status-tile">
+        <div class="status-label">Speech Stack</div>
+        <div class="status-value" id="speechStack">Bolna + Cartesia</div>
+        <div class="status-sub" id="speechStackSub">Voice agent orchestration + multilingual TTS</div>
+      </div>
     </div>
-    <div class="panel">
-      <div class="panel-head"><h2>Proactive Follow-up</h2><span class="hindi">वापसी कॉल</span></div>
-      <div class="followup" id="followup"><div class="muted">No follow-up scheduled.</div></div>
+
+    <div class="orchestration">
+      <div class="mini-pill teal">Bolna: voice orchestration, call webhooks, custom tool calls, outbound follow-up</div>
+      <div class="mini-pill amber">Cartesia: natural multilingual TTS, Kannada/Hindi voice-card generation, timestamps when available</div>
+      <div class="mini-pill" id="pinIndicator">Judge demo pin disabled</div>
     </div>
   </section>
-</main>
-<footer>Powered by Bolna (voice orchestration) + Cartesia (speech) · Built at VOC-A-Thon, Bengaluru</footer>
+
+  <div class="main-grid">
+    <div class="stack">
+      <section class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Judge Controls</h2>
+            <div class="section-note">Use the backend demo endpoints directly. Buttons disable while requests are in flight.</div>
+          </div>
+        </div>
+        <div class="controls-grid">
+          <button id="seedBtn" class="control-btn primary">
+            <strong>Seed Judge Demo</strong>
+            <span>POST /api/demo/seed</span>
+          </button>
+          <button id="wageBtn" class="control-btn secondary">
+            <strong>Run Wage Case</strong>
+            <span>POST /api/demo/wage</span>
+          </button>
+          <button id="healthBtn" class="control-btn secondary">
+            <strong>Run Hospital Voice Card</strong>
+            <span>POST /api/demo/health</span>
+          </button>
+          <button id="resetBtn" class="control-btn danger">
+            <strong>Reset</strong>
+            <span>POST /api/reset</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Live Call Panel</h2>
+            <div class="section-note">High-signal runtime view for judges: call status, worker context, and latest issue state.</div>
+          </div>
+        </div>
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-label">Call Status</div>
+            <div class="info-value" id="liveCallStatus">idle</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Worker</div>
+            <div class="info-value small" id="liveWorkerName">No active case</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Current Issue</div>
+            <div class="info-value small" id="liveIssue">Waiting for demo input</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">City</div>
+            <div class="info-value small" id="liveCity">—</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Language</div>
+            <div class="info-value small" id="liveLanguage">—</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Last Updated</div>
+            <div class="info-value small" id="liveLastUpdated">—</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Transcript</h2>
+            <div class="section-note">Worker messages appear left. Saathi replies appear right. System and tool activity shows up as compact event pills.</div>
+          </div>
+        </div>
+        <div id="transcriptPanel" class="transcript-wrap">
+          <div class="empty-state">No transcript yet. Seed the judge demo or wait for a live call.</div>
+        </div>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Case File</h2>
+            <div class="section-note">Current case fields derived from `/api/state`.</div>
+          </div>
+        </div>
+        <div class="kv-grid">
+          <div class="kv">
+            <div class="kv-label">Name</div>
+            <div class="kv-value" id="caseName">—</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">Origin</div>
+            <div class="kv-value" id="caseOrigin">—</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">Current City</div>
+            <div class="kv-value" id="caseCity">—</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">Work Type</div>
+            <div class="kv-value" id="caseWork">—</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">Language</div>
+            <div class="kv-value" id="caseLanguage">—</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">Problem Summary</div>
+            <div class="kv-value" id="caseProblem">—</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Wage Complaint</h2>
+            <div class="section-note">Demo/internal reference. Real deployment would integrate verified legal escalation or labour helpline workflow.</div>
+          </div>
+        </div>
+        <div class="kv-grid">
+          <div class="kv">
+            <div class="kv-label">Status</div>
+            <div class="kv-value" id="wageStatus">—</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">Employer</div>
+            <div class="kv-value" id="wageEmployer">—</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">City</div>
+            <div class="kv-value" id="wageCity">—</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">Days Unpaid</div>
+            <div class="kv-value" id="wageDays">—</div>
+          </div>
+          <div class="kv" style="grid-column:1 / -1">
+            <div class="kv-label">Reference ID</div>
+            <div class="kv-value" id="wageReference">—</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Hospital Voice Card</h2>
+            <div class="section-note">Cartesia generates the Kannada voice card.</div>
+          </div>
+        </div>
+        <div class="voice-card">
+          <div class="voice-box">
+            <div class="voice-box-label">Hindi Input</div>
+            <div class="voice-box-value" id="healthHindi">—</div>
+          </div>
+          <div class="voice-box teal">
+            <div class="voice-box-label">Kannada Output</div>
+            <div class="voice-box-value" id="healthKannada">—</div>
+          </div>
+          <div class="voice-box amber">
+            <div class="voice-box-label">English Gloss</div>
+            <div class="voice-box-value" id="healthGloss">—</div>
+          </div>
+          <div class="voice-box audio-wrap">
+            <div class="voice-box-label">Audio</div>
+            <div id="audioSlot" class="voice-box-value placeholder">Text-only fallback active</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card section" style="margin-top:18px">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">Architecture Strip</h2>
+        <div class="section-note">Worker phone call → Bolna voice agent → Saathi router → Specialist tools → Cartesia voice card / Case dashboard / Follow-up call</div>
+      </div>
+    </div>
+    <div class="arch-strip">
+      <div class="arch-node">
+        <h4>Worker Phone Call</h4>
+        <p>Simple phone access for migrant workers who need help without app installs or forms.</p>
+      </div>
+      <div class="arch-node bolna">
+        <h4>Bolna Voice Agent</h4>
+        <p>Voice orchestration, telephony, call webhooks, custom tool invocations, and outbound follow-up.</p>
+      </div>
+      <div class="arch-node">
+        <h4>Saathi Router</h4>
+        <p>Warm Hindi front-door experience that gathers context and routes to the right assistance flow.</p>
+      </div>
+      <div class="arch-node">
+        <h4>Specialist Tools</h4>
+        <p>Wage complaint drafting, hospital voice support, and future paperwork or housing tools.</p>
+      </div>
+      <div class="arch-node cartesia">
+        <h4>Cartesia Voice Card</h4>
+        <p>Natural multilingual TTS for Kannada/Hindi speech cards, with timestamps when available.</p>
+      </div>
+      <div class="arch-node">
+        <h4>Case Dashboard</h4>
+        <p>Judge-friendly command center for state, transcript, case updates, and follow-up readiness.</p>
+      </div>
+    </div>
+    <div class="footer-line">Single-file dashboard served directly by FastAPI. No client-side framework required.</div>
+  </section>
+</div>
 
 <script>
-// When served by the backend (Render/Railway/tunnel) → same origin. When opened as a
-// local file:// → fall back to localhost:8000.
-const API = (location.protocol === "file:") ? "http://localhost:8000" : location.origin;
-const $ = id => document.getElementById(id);
-let liveMode = true, lastEventCount = 0;
+const API = location.protocol === "file:" ? "http://localhost:8000" : location.origin;
+const POLL_MS = 2000;
+const $ = (id) => document.getElementById(id);
 
-function setCall(state){
-  $("callstate").textContent = state;
-  $("dot").className = "dot" + (state.includes("Live") ? " live" : "");
-}
-function bubble(who, text, dev=true){
-  const t = $("transcript");
-  if (t.querySelector(".muted")) t.innerHTML = "";
-  const d = document.createElement("div");
-  d.className = "bubble " + who;
-  const label = who==="worker" ? "Ramesh (Worker)" : who==="agent" ? "Saathi (PravaasiDesk)" : "";
-  d.innerHTML = (label?`<div class="who">${label}</div>`:"") + `<span class="${dev?'dev':''}">${text}</span>`;
-  t.appendChild(d); t.scrollTop = t.scrollHeight;
-}
-function setField(id, val, dev=false){
-  const el = $(id);
-  el.classList.remove("empty"); el.classList.add("flash");
-  el.innerHTML = dev ? `<span class="dev">${val}</span>` : val;
-  setTimeout(()=>el.classList.remove("flash"), 1000);
-}
-function activate(agent){
-  document.querySelectorAll(".agent-chip").forEach(c=>c.classList.remove("active"));
-  if(agent) $("a-"+agent).classList.add("active");
-}
-function showComplaint(c){
-  $("complaint").innerHTML = `
-    <h3>Form V — Claim under Payment of Wages Act</h3>
-    <div class="row"><span>Claimant</span><b>${c.name}</b></div>
-    <div class="row"><span>Contractor</span><b>${c.contractor}</b></div>
-    <div class="row"><span>Amount due</span><b>₹${c.amount}</b></div>
-    <div class="row"><span>Work site</span><b>${c.site}</b></div>
-    <div class="row"><span>Period</span><b>${c.period}</b></div>
-    <div class="row"><span>Ref. number</span><b>${c.ref}</b></div>
-    <div class="stamp" id="stamp">शिकायत दर्ज<br><span style="font-size:14px;font-family:'IBM Plex Mono'">COMPLAINT FILED</span></div>`;
-  setTimeout(()=>$("stamp").classList.add("show"), 600);
-}
-let karaokeTimer = null;
-function showClip(c){
-  if(karaokeTimer){ clearInterval(karaokeTimer); karaokeTimer = null; }
-  // words: [{w,start,end}] from Cartesia. If absent, split the text so karaoke still runs.
-  let words = (c.words && c.words.length) ? c.words
-            : (c.kannada_text || "").split(/\s+/).filter(Boolean).map(w=>({w}));
-  const hasTimes = words.length && words[0].start != null;
-  const inner = words.map((o,i)=>`<span class="kw" data-i="${i}">${o.w}</span>`).join(' ');
-  $("clip").innerHTML = `
-    <div style="font-size:13px;color:var(--ink-soft)">Worker plays this to hospital staff:</div>
-    <div class="kannada" id="kannada-line">${inner}</div>
-    ${c.audio_url ? `<audio controls id="clip-audio" src="${c.audio_url}"></audio>` : ""}
-    <div class="play-note">Voice: Cartesia Sonic · <b>Saathi's own voice speaking Kannada</b> · word-synced · sent to worker via SMS</div>`;
-  const spans = [...document.querySelectorAll('#kannada-line .kw')];
-  const setActive = i => spans.forEach((s,k)=>s.classList.toggle('active', k===i));
-  function timedSweep(){            // visual karaoke without audio (or while autoplay is blocked)
-    if(karaokeTimer) return;
-    let i = 0; setActive(0);
-    karaokeTimer = setInterval(()=>{ i++; if(i>=spans.length){ setActive(-1); clearInterval(karaokeTimer); karaokeTimer=null; } else setActive(i); }, 300);
-  }
-  const audio = $("clip-audio");
-  if(audio){
-    let times = words.map(o=>({start:o.start,end:o.end}));
-    if(!hasTimes){
-      audio.addEventListener('loadedmetadata', ()=>{
-        const d = audio.duration || words.length*0.4;
-        times = words.map((o,i)=>({start:i*d/words.length, end:(i+1)*d/words.length}));
-      });
-    }
-    audio.addEventListener('play', ()=>{ if(karaokeTimer){ clearInterval(karaokeTimer); karaokeTimer=null; } });
-    audio.addEventListener('timeupdate', ()=>{
-      const t = audio.currentTime; let a = -1;
-      for(let i=0;i<times.length;i++){ if(t>=times[i].start && t<times[i].end){ a=i; break; } }
-      setActive(a);
-    });
-    audio.addEventListener('ended', ()=>setActive(-1));
-    // try to autoplay with sound; if the browser blocks it, run the visual sweep so a
-    // hands-off viewer still SEES the karaoke (sound starts the moment they press play).
-    audio.play().catch(()=>timedSweep());
-  } else if(words.length){
-    timedSweep();
-  }
-}
-function showFollowup(f){
-  $("followup").innerHTML = `
-    <div>Saathi will call <b>${f.name}</b> back to check on the complaint and hospital visit.</div>
-    <div class="when">📞 Outbound call · ${f.when} · via Bolna /call API</div>`;
+const state = {
+  publicConfig: null,
+  health: null,
+  appState: null,
+  online: false,
+  busy: new Set(),
+};
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
-/* ---------- LIVE MODE: poll your server ---------- */
-async function poll(){
-  if(!liveMode) return;
+function pretty(value, fallback = "—"){
+  if(value === null || value === undefined || value === "") return fallback;
+  return String(value);
+}
+
+function formatTime(value, fallback = "—"){
+  if(!value) return fallback;
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return fallback;
+  return date.toLocaleString([], {
+    month:"short",
+    day:"numeric",
+    hour:"2-digit",
+    minute:"2-digit",
+    second:"2-digit"
+  });
+}
+
+function setBusy(button, busy){
+  if(!button) return;
+  if(busy){
+    state.busy.add(button.id);
+    button.disabled = true;
+    button.classList.add("loading");
+  }else{
+    state.busy.delete(button.id);
+    button.disabled = false;
+    button.classList.remove("loading");
+  }
+}
+
+async function postAction(path, button){
+  if(button && state.busy.has(button.id)) return;
+  setBusy(button, true);
   try{
-    const r = await fetch(API + "/api/state");
-    const s = await r.json();
-    if(s.call_active) setCall("Live call in progress"); 
-    (s.events || []).slice(lastEventCount).forEach(handleEvent);
-    lastEventCount = (s.events || []).length;
-  }catch(e){ /* server not up yet — demo mode still works */ }
+    const response = await fetch(API + path, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:"{}"
+    });
+    if(!response.ok) throw new Error(`${path} failed with ${response.status}`);
+    await response.json();
+    await refreshAll();
+  }catch(error){
+    markOffline(error);
+  }finally{
+    setBusy(button, false);
+  }
 }
-function handleEvent(ev){
-  if(ev.type==="transcript") bubble(ev.who, ev.text);
-  if(ev.type==="field") setField("f-"+ev.field, ev.value, ev.dev);
-  if(ev.type==="case_open"){ $("caseid").textContent = "CASE — " + ev.id; $("casedate").textContent = ev.date; }
-  if(ev.type==="agent") activate(ev.agent);
-  if(ev.type==="complaint") showComplaint(ev.data);
-  if(ev.type==="clip") showClip(ev.data);
-  if(ev.type==="followup") showFollowup(ev.data);
-  if(ev.type==="call_end") setCall("Call ended — case updated");
-}
-setInterval(poll, 1500);
 
-/* ---------- DEMO MODE: scripted 3-act sequence ----------
-   The two marquee beats (complaint + Kannada card) call the REAL backend so the
-   Cartesia voice card plays genuine audio with real karaoke. Falls back to baked-in
-   data if the server isn't reachable, so the demo still runs fully offline. */
-const script = [
-  [0,   ()=>{ setCall("Live call in progress"); activate("saathi");
-        $("caseid").textContent="CASE — PD-2026-0117"; $("casedate").textContent="13 Jun 2026"; }],
-  [400, ()=>bubble("agent","नमस्ते! प्रवासी डेस्क में आपका स्वागत है। मैं साथी हूँ। बताइए, क्या मदद चाहिए?")],
-  [2800,()=>bubble("worker","मेरा नाम रमेश है, गोरखपुर से हूँ। बैंगलोर में राजमिस्त्री का काम करता हूँ।")],
-  [4200,()=>{ setField("f-name","Ramesh Yadav"); setField("f-home","Gorakhpur, UP"); setField("f-city","Bengaluru"); setField("f-trade","Mason (राजमिस्त्री)",true); setField("f-lang","Hindi / Bhojpuri"); }],
-  [5600,()=>bubble("worker","ठेकेदार ने तीन हफ़्ते से ₹4,500 नहीं दिया। बोलता है अगले महीने मिलेगा।")],
-  [7400,()=>{ activate("haq"); bubble("system","→ routing to Haq · wage recovery"); }],
-  [8200,()=>bubble("agent","रमेश जी, मज़दूरी रोकना क़ानूनन ग़लत है। ठेकेदार का नाम और साइट बताइए — मैं अभी शिकायत तैयार करता हूँ।")],
-  [10600,()=>bubble("worker","ठेकेदार सुरेश है, व्हाइटफ़ील्ड की साइट, प्रेस्टीज वाली बिल्डिंग।")],
-  [12200, async ()=>{ setField("f-issues","Wage theft — ₹4,500");
-        let data={name:"Ramesh Yadav",contractor:"Suresh (sub-contractor)",amount:"4,500",site:"Prestige site, Whitefield",period:"19 May – 8 Jun 2026",ref:"SS/KA/2026/88412"};
-        try{ const r=await fetch(API+"/api/tools/file-complaint",{method:"POST",headers:{"Content-Type":"application/json"},
-               body:JSON.stringify({worker_name:data.name,contractor:data.contractor,amount:data.amount,site:data.site,period:data.period})});
-             const j=await r.json(); if(j.reference_number) data.ref=j.reference_number; }catch(e){}  // real ref, concurrency-safe
-        showComplaint(data); }],
-  [13400,()=>bubble("agent","आपकी शिकायत श्रम सुविधा पोर्टल पर दर्ज हो गई — नंबर SMS पर भेज दिया है। 7 दिन में ठेकेदार को नोटिस जाएगा।")],
-  [16000,()=>bubble("worker","एक और बात... दो दिन से पेट में बहुत दर्द है। यहाँ अस्पताल में कन्नड़ बोलते हैं, मुझे कुछ समझ नहीं आता।")],
-  [18000,()=>{ activate("sehat"); bubble("system","→ routing to Sehat · health assist"); }],
-  [18800,()=>bubble("agent","चिंता मत कीजिए। पास का सरकारी अस्पताल है — सी.वी. रमन जनरल, इंदिरानगर। मैं एक ऑडियो भेज रहा हूँ — काउंटर पर बस इसे चला दीजिए।")],
-  [20600, async ()=>{ let data={kannada_text:"ನಮಸ್ಕಾರ. ಇವರ ಹೆಸರು ರಮೇಶ್. ಇವರಿಗೆ ಎರಡು ದಿನದಿಂದ ಹೊಟ್ಟೆ ನೋವು ಇದೆ. ಇವರಿಗೆ ಕನ್ನಡ ಬರುವುದಿಲ್ಲ. ದಯವಿಟ್ಟು ಸಹಾಯ ಮಾಡಿ. ತುರ್ತು ಸಂಪರ್ಕ: ಪ್ರವಾಸಿ ಡೆಸ್ಕ್.",audio_url:"",words:[]};
-        try{ const r=await fetch(API+"/api/demo-card"); const j=await r.json(); if(j.kannada_text) data=j; }catch(e){}  // cached real Cartesia card
-        showClip(data); }],
-  [22400,()=>{ showFollowup({name:"Ramesh",when:"Tomorrow 6:00 PM IST"}); }],
-  [23400,()=>bubble("agent","और रमेश जी — कल शाम मैं ख़ुद फ़ोन करके पूछूँगा कि अस्पताल में सब ठीक रहा या नहीं। आप अकेले नहीं हैं।")],
-  [26000,()=>{ setCall("Call ended — case updated"); activate(null); bubble("system","call ended · 2 actions completed · follow-up scheduled"); }]
-];
-$("demoBtn").addEventListener("click", ()=>{
-  liveMode = false;            // stop polling; we drive the sequence client-side (concurrency-safe)
-  $("transcript").innerHTML = "";
-  script.forEach(([t,fn])=>setTimeout(fn,t));
-});
+function markOffline(){
+  state.online = false;
+  const indicator = $("backendIndicator");
+  indicator.className = "health-chip offline";
+  indicator.innerHTML = '<span class="chip-dot"></span><span>Backend offline</span>';
+  $("backendStatus").textContent = "Offline";
+  $("backendService").textContent = "State polling failed; UI remains visible";
+}
+
+function markOnline(serviceName){
+  state.online = true;
+  const indicator = $("backendIndicator");
+  indicator.className = "health-chip online";
+  indicator.innerHTML = '<span class="chip-dot"></span><span>Backend online</span>';
+  $("backendStatus").textContent = "Healthy";
+  $("backendService").textContent = serviceName || "PravaasiDesk";
+}
+
+function renderHero(){
+  const health = state.health || {};
+  const config = state.publicConfig || {};
+  if(health.ok){
+    markOnline(health.service);
+  }else{
+    markOffline();
+  }
+
+  $("demoModeStatus").textContent = config.demo_mode === true ? "Enabled" : config.demo_mode === false ? "Disabled" : "Unknown";
+  $("publicPhone").textContent = pretty(config.bolna_phone_number, "Not configured");
+  $("lastEventAt").textContent = formatTime(health.last_event_at || state.appState?.last_event_at, "No events yet");
+  $("speechStackSub").textContent = health.cartesia_configured
+    ? "Bolna orchestration live · Cartesia voice card available"
+    : "Bolna orchestration live · Cartesia fallback may be text-only";
+  $("pinIndicator").textContent = config.judge_demo_pin_enabled ? "Judge demo pin enabled" : "Judge demo pin disabled";
+}
+
+function renderLiveCall(){
+  const app = state.appState || {};
+  const current = app.current_case || app.case || {};
+  $("liveCallStatus").textContent = pretty(app.call_status, "idle");
+  $("liveWorkerName").textContent = pretty(current.name, "No active case");
+  $("liveIssue").textContent = pretty(current.issues, "Waiting for demo input");
+  $("liveCity").textContent = pretty(current.current_city || current.city);
+  $("liveLanguage").textContent = pretty(current.language || current.lang);
+  $("liveLastUpdated").textContent = formatTime(app.last_event_at);
+}
+
+function setValue(id, value){
+  const el = $(id);
+  const text = pretty(value);
+  el.textContent = text;
+  el.classList.toggle("placeholder", text === "—");
+}
+
+function renderCaseFile(){
+  const current = state.appState?.current_case || state.appState?.case || {};
+  setValue("caseName", current.name);
+  setValue("caseOrigin", current.origin || current.home_state || current.home);
+  setValue("caseCity", current.current_city || current.city);
+  setValue("caseWork", current.work_type || current.work || current.trade);
+  setValue("caseLanguage", current.language || current.lang);
+  setValue("caseProblem", current.problem_summary || current.issues);
+}
+
+function renderWage(){
+  const wage = state.appState?.wage_complaint;
+  setValue("wageStatus", wage?.status);
+  setValue("wageEmployer", wage?.employer_name || wage?.contractor);
+  setValue("wageCity", wage?.city);
+  setValue("wageDays", wage?.days_unpaid);
+  setValue("wageReference", wage?.reference_id || wage?.ref);
+}
+
+function renderHealthCard(){
+  const card = state.appState?.health_card;
+  setValue("healthHindi", card?.symptom_hindi || "No hospital voice card requested yet");
+  setValue("healthKannada", card?.text || card?.kannada_text);
+  setValue("healthGloss", card?.gloss);
+
+  const slot = $("audioSlot");
+  if(card?.audio_url){
+    slot.classList.remove("placeholder");
+    slot.innerHTML = `<audio controls src="${escapeHtml(card.audio_url)}"></audio>`;
+  }else{
+    slot.classList.add("placeholder");
+    slot.textContent = "Text-only fallback active";
+  }
+}
+
+function eventTone(event){
+  if(event.type === "agent" || event.type === "complaint" || event.type === "clip" || event.type === "followup"){
+    return "tool";
+  }
+  return "system";
+}
+
+function eventLabel(event){
+  if(event.type === "case_open") return `Case opened · ${event.id || "new case"}`;
+  if(event.type === "field") return `${event.field || "field"} updated · ${event.value || "—"}`;
+  if(event.type === "agent") return `Routed to ${event.agent || "tool"}`;
+  if(event.type === "complaint") return `Wage complaint prepared · ${event.data?.reference_id || event.data?.ref || "ref pending"}`;
+  if(event.type === "clip") return event.data?.audio_url ? "Hospital voice card generated" : "Hospital voice card text fallback";
+  if(event.type === "followup") return `Follow-up ready · ${event.data?.when || "pending"}`;
+  if(event.type === "call_end") return "Call ended";
+  return event.type || "system event";
+}
+
+function buildTimeline(events){
+  return (events || []).map((event, index) => ({
+    id: `${event.type || "event"}-${index}`,
+    type: event.type,
+    who: event.who,
+    text: event.text,
+    at: event.at || event.ts,
+    data: event.data,
+    field: event.field,
+    value: event.value,
+    event,
+  }));
+}
+
+function renderTranscript(){
+  const panel = $("transcriptPanel");
+  const timeline = buildTimeline(state.appState?.events || []);
+  if(!timeline.length){
+    panel.innerHTML = '<div class="empty-state">No transcript yet. Seed the judge demo or wait for a live call.</div>';
+    return;
+  }
+
+  panel.innerHTML = timeline.map((item) => {
+    if(item.type === "transcript"){
+      const who = item.who === "worker" ? "worker" : item.who === "agent" ? "agent" : "system";
+      if(who === "system"){
+        return `
+          <div class="event-pill system">
+            <span>${escapeHtml(item.text || "System update")}</span>
+            <span class="pill-time">${escapeHtml(formatTime(item.at, ""))}</span>
+          </div>
+        `;
+      }
+      const speaker = who === "worker" ? "Worker" : "Saathi";
+      return `
+        <div class="bubble-row ${who}">
+          <div class="bubble ${who}">
+            <div class="bubble-head">
+              <span class="speaker">${speaker}</span>
+              <span class="bubble-time">${escapeHtml(formatTime(item.at, ""))}</span>
+            </div>
+            <div class="bubble-text">${escapeHtml(item.text || "")}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    if(item.type === "field"){
+      return `
+        <div class="event-pill system">
+          <span>${escapeHtml(eventLabel(item.event))}</span>
+          <span class="pill-time">${escapeHtml(formatTime(item.at, ""))}</span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="event-pill ${eventTone(item.event)}">
+        <span>${escapeHtml(eventLabel(item.event))}</span>
+        <span class="pill-time">${escapeHtml(formatTime(item.at, ""))}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderAll(){
+  renderHero();
+  renderLiveCall();
+  renderCaseFile();
+  renderWage();
+  renderHealthCard();
+  renderTranscript();
+}
+
+async function fetchJson(path){
+  const response = await fetch(API + path, {cache:"no-store"});
+  if(!response.ok) throw new Error(`${path} failed with ${response.status}`);
+  return response.json();
+}
+
+async function refreshAll(){
+  try{
+    const [health, publicConfig, appState] = await Promise.all([
+      fetchJson("/healthz"),
+      fetchJson("/api/config/public"),
+      fetchJson("/api/state"),
+    ]);
+    state.health = health;
+    state.publicConfig = publicConfig;
+    state.appState = appState;
+    state.online = true;
+    renderAll();
+  }catch(error){
+    markOffline(error);
+    renderAll();
+  }
+}
+
+$("seedBtn").addEventListener("click", () => postAction("/api/demo/seed", $("seedBtn")));
+$("wageBtn").addEventListener("click", () => postAction("/api/demo/wage", $("wageBtn")));
+$("healthBtn").addEventListener("click", () => postAction("/api/demo/health", $("healthBtn")));
+$("resetBtn").addEventListener("click", () => postAction("/api/reset", $("resetBtn")));
+
+renderAll();
+refreshAll();
+setInterval(refreshAll, POLL_MS);
 </script>
 </body>
 </html>

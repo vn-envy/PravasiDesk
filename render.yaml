@@ -13,6 +13,8 @@ services:
         sync: false
       - key: BOLNA_AGENT_ID
         sync: false
+      - key: BOLNA_PHONE_NUMBER
+        sync: false
       - key: CARTESIA_API_KEY
         sync: false
       - key: CARTESIA_HINDI_VOICE_ID
@@ -21,4 +23,10 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: JUDGE_DEMO_PIN
+        sync: false
+      - key: DEMO_MODE
+        value: "true"
+      - key: STATE_FILE
+        value: demo_state.json
       # PUBLIC_BASE_URL is optional — Render injects RENDER_EXTERNAL_URL automatically.
