@@ -6,7 +6,9 @@
 
 # Generated Cartesia voice cards
 static/*.mp3
+static/*.wav
 static/clip_*
+demo_state.json
 
 # Python
 __pycache__/
